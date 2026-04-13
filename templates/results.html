@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>find-proxy: {{ query }}</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 1em; }
+  .bar { display: flex; gap: 1em; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.8em; }
+  .bar a { text-decoration: none; padding: 0.3em 0.7em; border: 1px solid #ccc; border-radius: 4px; color: #0366d6; }
+  .bar a.disabled { color: #aaa; pointer-events: none; border-color: #eee; }
+  .meta { color: #666; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; }
+  td.n { color: #999; text-align: right; padding-right: 0.8em; font-family: monospace; width: 1%; white-space: nowrap; vertical-align: top; }
+  td.l { font-family: monospace; white-space: pre-wrap; word-break: break-all; padding: 2px 0; }
+  tr:nth-child(even) { background: #f7f7f7; }
+  .q { font-family: monospace; background: #eef; padding: 0.1em 0.4em; border-radius: 3px; }
+  form.search { display: flex; gap: 0.5em; margin-bottom: 0.8em; }
+  form.search input { flex: 1; padding: 0.4em; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<form class="search" action="{{ url_for('search') }}" method="post">
+  <input type="text" name="q" value="{{ query|e }}" autofocus>
+  <button type="submit">Искать</button>
+  <a href="{{ url_for('index') }}" style="align-self:center;">на главную</a>
+</form>
+
+<div class="bar">
+  <span>Запрос: <span class="q">{{ query }}</span></span>
+  <span class="meta">найдено строк: {{ total }} | страница {{ page }} / {{ total_pages }} | по {{ per_page }}</span>
+</div>
+
+<div class="bar">
+  <a class="{% if page <= 1 %}disabled{% endif %}" href="{{ url_for('results', rid=rid, page=1, per_page=per_page, q=query) }}">« первая</a>
+  <a class="{% if page <= 1 %}disabled{% endif %}" href="{{ url_for('results', rid=rid, page=page-1, per_page=per_page, q=query) }}">‹ назад</a>
+  <a class="{% if page >= total_pages %}disabled{% endif %}" href="{{ url_for('results', rid=rid, page=page+1, per_page=per_page, q=query) }}">вперёд ›</a>
+  <a class="{% if page >= total_pages %}disabled{% endif %}" href="{{ url_for('results', rid=rid, page=total_pages, per_page=per_page, q=query) }}">последняя »</a>
+</div>
+
+{% if lines %}
+<table>
+  <tbody>
+  {% for line in lines %}
+    <tr>
+      <td class="n">{{ start_index + loop.index }}</td>
+      <td class="l">{{ line }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Ничего не найдено.</p>
+{% endif %}
+
+</body>
+</html>

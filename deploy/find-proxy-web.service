@@ -1,0 +1,16 @@
+[Unit]
+Description=find-proxy web UI
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/find-proxy-web
+ExecStart=/opt/find-proxy-web/venv/bin/python /opt/find-proxy-web/app.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

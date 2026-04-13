@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>find-proxy</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; }
+  h1 { margin-bottom: 0.2em; }
+  form { display: flex; gap: 0.5em; margin: 1em 0; }
+  input[type=text] { flex: 1; padding: 0.5em; font-size: 1em; font-family: monospace; }
+  button { padding: 0.5em 1em; font-size: 1em; cursor: pointer; }
+  .error { color: #b00; background: #fee; padding: 0.7em 1em; border: 1px solid #fbb; border-radius: 4px; }
+  .hint { color: #666; font-size: 0.9em; }
+</style>
+</head>
+<body>
+  <h1>find-proxy</h1>
+  <p class="hint">Введите один или несколько паттернов через пробел (так же, как в консольном <code>find-proxy</code>).</p>
+  <form action="{{ url_for('search') }}" method="post">
+    <input type="text" name="q" value="{{ query|e }}" autofocus placeholder="напр. 192.168.1.1 user@example">
+    <button type="submit">Искать</button>
+  </form>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+</body>
+</html>
