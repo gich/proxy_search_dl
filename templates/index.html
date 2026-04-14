@@ -14,10 +14,10 @@
 </style>
 </head>
 <body>
-  <h1>find-proxy</h1>
-  <p class="hint">Введите один или несколько паттернов через пробел (так же, как в консольном <code>find-proxy</code>).</p>
+  <h1>поиск по логу nginx</h1>
+  <p class="hint">Введите один или несколько паттернов через пробел</p>
   <form action="{{ url_for('search') }}" method="post">
-    <input type="text" name="q" value="{{ query|e }}" autofocus placeholder="напр. 192.168.1.1 user@example">
+    <input type="text" name="q" value="{{ query|e }}" autofocus placeholder="введите номер заказа">
     <button type="submit">Искать</button>
   </form>
   {% if error %}<div class="error">{{ error }}</div>{% endif %}
