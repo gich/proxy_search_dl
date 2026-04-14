@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>{{ row.type }} — {{ row.date }}</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 1100px; margin: 1.5em auto; padding: 0 1em; }
+  nav { display: flex; gap: 1em; margin-bottom: 1em; font-size: 0.95em; }
+  nav a { color: #0366d6; text-decoration: none; }
+  h1 { margin: 0.2em 0; font-size: 1.2em; }
+  .meta { color: #666; margin-bottom: 1em; font-family: monospace; }
+  .warn { color: #a60; background: #fff8e1; padding: 0.6em 1em; border: 1px solid #f0d48a; border-radius: 4px; margin-bottom: 1em; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 1em; border-radius: 6px; overflow: auto; font-size: 0.9em; line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="{{ url_for('requestfromsite_results', rid=rid) }}">← назад к результатам</a>
+  <a href="{{ url_for('index') }}">поиск по nginx</a>
+  <a href="{{ url_for('requestfromsite') }}">новый запрос</a>
+</nav>
+
+<h1>{{ row.type }}</h1>
+<div class="meta">{{ row.date }}</div>
+
+{% if not valid %}
+<div class="warn">Невалидный JSON — показан сырой текст.</div>
+{% endif %}
+
+<pre>{{ pretty }}</pre>
+
+</body>
+</html>

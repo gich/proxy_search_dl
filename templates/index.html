@@ -11,9 +11,16 @@
   button { padding: 0.5em 1em; font-size: 1em; cursor: pointer; }
   .error { color: #b00; background: #fee; padding: 0.7em 1em; border: 1px solid #fbb; border-radius: 4px; }
   .hint { color: #666; font-size: 0.9em; }
+  nav { display: flex; gap: 1em; margin-bottom: 1em; font-size: 0.95em; }
+  nav a { color: #0366d6; text-decoration: none; }
+  nav a.active { font-weight: bold; color: #222; }
 </style>
 </head>
 <body>
+  <nav>
+    <a class="active" href="{{ url_for('index') }}">поиск по nginx</a>
+    <a href="{{ url_for('requestfromsite') }}">запросы с сайта</a>
+  </nav>
   <h1>поиск по логу nginx</h1>
   <p class="hint">Введите один или несколько паттернов через пробел</p>
   <form action="{{ url_for('search') }}" method="post">

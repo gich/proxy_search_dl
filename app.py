@@ -1,12 +1,16 @@
+import json
 import os
 import re
 import subprocess
 import tempfile
 import time
 import uuid
+from collections import OrderedDict
 from pathlib import Path
 
 from flask import Flask, abort, redirect, render_template, request, url_for
+
+import db
 
 app = Flask(__name__)
 
@@ -18,6 +22,29 @@ TOKEN_RE = re.compile(r"^[\w\.\-:@/+%]+$")
 MAX_TOKEN_LEN = 200
 DEFAULT_PER_PAGE = 200
 UUID_RE = re.compile(r"^[0-9a-f]{32}$")
+
+DB_CACHE_MAX = 32
+DB_CACHE_TTL = 10 * 60
+_db_cache: "OrderedDict[str, tuple[float, list[dict]]]" = OrderedDict()
+
+
+def db_cache_put(rid: str, rows: list[dict]) -> None:
+    _db_cache[rid] = (time.time(), rows)
+    _db_cache.move_to_end(rid)
+    while len(_db_cache) > DB_CACHE_MAX:
+        _db_cache.popitem(last=False)
+
+
+def db_cache_get(rid: str) -> list[dict] | None:
+    entry = _db_cache.get(rid)
+    if not entry:
+        return None
+    ts, rows = entry
+    if time.time() - ts > DB_CACHE_TTL:
+        _db_cache.pop(rid, None)
+        return None
+    _db_cache.move_to_end(rid)
+    return rows
 
 
 def cleanup_old_results():
@@ -127,6 +154,76 @@ def results(rid):
         total=total,
         total_pages=total_pages,
         start_index=start,
+    )
+
+
+@app.route("/requestfromsite", methods=["GET", "POST"])
+def requestfromsite():
+    if request.method == "POST":
+        q = request.form.get("q", "").strip()
+        if not q:
+            return render_template("requestfromsite.html", query="", error="Пустой запрос", rid=None, rows=None), 400
+        if len(q) > MAX_TOKEN_LEN:
+            return render_template("requestfromsite.html", query=q, error="Слишком длинное значение", rid=None, rows=None), 400
+        try:
+            rows = db.fetch_rows(q)
+        except Exception as e:
+            app.logger.exception("db.fetch_rows failed")
+            return render_template("requestfromsite.html", query=q, error=f"Ошибка БД: {e}", rid=None, rows=None), 500
+        rid = uuid.uuid4().hex
+        db_cache_put(rid, rows)
+        return redirect(url_for("requestfromsite_results", rid=rid, q=q))
+
+    return render_template("requestfromsite.html", query="", error=None, rid=None, rows=None)
+
+
+@app.route("/requestfromsite/<rid>")
+def requestfromsite_results(rid):
+    if not UUID_RE.match(rid):
+        abort(404)
+    rows = db_cache_get(rid)
+    if rows is None:
+        return render_template(
+            "requestfromsite.html",
+            query=request.args.get("q", ""),
+            error="Результаты истекли, выполните запрос снова",
+            rid=None,
+            rows=None,
+        ), 404
+    return render_template(
+        "requestfromsite.html",
+        query=request.args.get("q", ""),
+        error=None,
+        rid=rid,
+        rows=rows,
+    )
+
+
+@app.route("/requestfromsite/<rid>/<int:idx>")
+def requestfromsite_row(rid, idx):
+    if not UUID_RE.match(rid):
+        abort(404)
+    rows = db_cache_get(rid)
+    if rows is None:
+        abort(404)
+    if idx < 0 or idx >= len(rows):
+        abort(404)
+    row = rows[idx]
+    body = row.get("body") or ""
+    try:
+        parsed = json.loads(body)
+        pretty = json.dumps(parsed, ensure_ascii=False, indent=2)
+        valid = True
+    except (ValueError, TypeError):
+        pretty = body
+        valid = False
+    return render_template(
+        "json_view.html",
+        rid=rid,
+        idx=idx,
+        row=row,
+        pretty=pretty,
+        valid=valid,
     )
 
 
